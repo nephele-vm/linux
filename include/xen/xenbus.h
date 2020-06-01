@@ -79,6 +79,7 @@ struct xenbus_device {
 	struct completion down;
 	struct work_struct work;
 	struct semaphore reclaim_sem;
+	int cloned;
 };
 
 static inline struct xenbus_device *to_xenbus_device(struct device *dev)
@@ -217,6 +218,7 @@ int xenbus_alloc_evtchn(struct xenbus_device *dev, evtchn_port_t *port);
 int xenbus_free_evtchn(struct xenbus_device *dev, evtchn_port_t port);
 
 enum xenbus_state xenbus_read_driver_state(const char *path);
+int xenbus_read_cloning_state(const char *path);
 
 __printf(3, 4)
 void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);

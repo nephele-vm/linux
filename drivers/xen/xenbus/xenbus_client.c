@@ -885,6 +885,22 @@ enum xenbus_state xenbus_read_driver_state(const char *path)
 }
 EXPORT_SYMBOL_GPL(xenbus_read_driver_state);
 
+int xenbus_read_cloning_state(const char *path)
+{
+	int cloned = 0;
+	char *str;
+
+	str = xenbus_read(XBT_NIL, path, "cloned", NULL);
+	if (!IS_ERR(str)) {
+		if (!strcmp(str, "true"))
+			cloned = 1;
+		kfree(str);
+	}
+
+	return cloned;
+}
+EXPORT_SYMBOL_GPL(xenbus_read_cloning_state);
+
 static const struct xenbus_ring_ops ring_ops_hvm = {
 	.map = xenbus_map_ring_hvm,
 	.unmap = xenbus_unmap_ring_hvm,

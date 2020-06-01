@@ -438,12 +438,15 @@ int xenbus_probe_node(struct xen_bus_type *bus,
 	struct xenbus_device *xendev;
 	size_t stringlen;
 	char *tmpstring;
+	int cloned = 0;
 
 	enum xenbus_state state = xenbus_read_driver_state(nodename);
 
 	if (state != XenbusStateInitialising) {
 		/* Device is not new, so ignore it.  This can happen if a
 		   device is going away after switching to Closed.  */
+		cloned = xenbus_read_cloning_state(nodename);
+		if (cloned == 0)
 		return 0;
 	}
 
@@ -453,6 +456,7 @@ int xenbus_probe_node(struct xen_bus_type *bus,
 		return -ENOMEM;
 
 	xendev->state = XenbusStateInitialising;
+	xendev->cloned = cloned;
 
 	/* Copy the strings into the extra space. */
 
