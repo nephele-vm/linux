@@ -211,6 +211,11 @@ static int netback_uevent(struct xenbus_device *xdev,
 	if (add_uevent_var(env, "script=%s", be->hotplug_script))
 		return -ENOMEM;
 
+	if (xdev->cloned) {
+		if (add_uevent_var(env, "cloned=%d", xdev->cloned))
+			return -ENOMEM;
+	}
+
 	if (!be->vif)
 		return 0;
 
@@ -1015,6 +1020,9 @@ static int netback_probe(struct xenbus_device *dev,
 	be->dev = dev;
 	dev_set_drvdata(&dev->dev, be);
 
+	if (dev->cloned) {
+
+	} else {
 	sg = 1;
 
 	do {
@@ -1126,6 +1134,7 @@ static int netback_probe(struct xenbus_device *dev,
 		pr_debug("Error writing feature-ctrl-ring\n");
 
 	backend_switch_state(be, XenbusStateInitWait);
+	}
 
 	script = xenbus_read(XBT_NIL, dev->nodename, "script", NULL);
 	if (IS_ERR(script)) {
@@ -1140,6 +1149,11 @@ static int netback_probe(struct xenbus_device *dev,
 	err = backend_create_xenvif(be);
 	if (err)
 		goto fail;
+
+	if (dev->cloned) {
+		backend_connect(be);
+		be->state = XenbusStateConnected;
+	}
 
 	return 0;
 
