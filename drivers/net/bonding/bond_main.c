@@ -104,6 +104,7 @@ static char *lacp_rate;
 static int min_links;
 static char *ad_select;
 static char *xmit_hash_policy;
+static int custom_hash;
 static int arp_interval;
 static char *arp_ip_target[BOND_MAX_ARP_TARGETS];
 static char *arp_validate;
@@ -165,6 +166,8 @@ MODULE_PARM_DESC(xmit_hash_policy, "balance-alb, balance-tlb, balance-xor, 802.3
 				   "0 for layer 2 (default), 1 for layer 3+4, "
 				   "2 for layer 2+3, 3 for encap layer 2+3, "
 				   "4 for encap layer 3+4");
+module_param(custom_hash, int, 0);
+MODULE_PARM_DESC(custom_hash, "Enable custom hash");
 module_param(arp_interval, int, 0);
 MODULE_PARM_DESC(arp_interval, "arp interval in milliseconds");
 module_param_array(arp_ip_target, charp, NULL, 0);
@@ -3537,6 +3540,20 @@ u32 bond_xmit_hash(struct bonding *bond, struct sk_buff *skb)
 	} else {
 		if (flow.icmp.id)
 			memcpy(&hash, &flow.icmp, sizeof(hash));
+		else if (custom_hash) {
+			/*
+			 * https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-using_channel_bonding
+			 *
+			 * ((source_port XOR dest_port) XOR
+			 *  ((source_IP XOR dest_IP) AND 0xffff)
+			 * ) MODULO slave_count
+			 */
+
+			hash = ntohs(flow.ports.src) ^ ntohs(flow.ports.dst);
+			hash ^= (ntohl(flow_get_u32_src(&flow)) ^ ntohl(flow_get_u32_dst(&flow))) & 0xffff;
+			return hash;
+
+		}
 		else
 			memcpy(&hash, &flow.ports.ports, sizeof(hash));
 	}
