@@ -24,7 +24,7 @@
 
 #define BR_HOLD_TIME (1*HZ)
 
-#define BR_PORT_BITS	10
+#define BR_PORT_BITS	12
 #define BR_MAX_PORTS	(1<<BR_PORT_BITS)
 
 #define BR_MULTICAST_DEFAULT_HASH_MAX 4096
